@@ -22,6 +22,17 @@ It exists to make the product idea immediately obvious to an advisor/investor.
    Manager, Executive, and HR and watch both answers (and their citations)
    change in place.
 
+Other interactions:
+
+- **Click a citation chip** (or a sidebar document) to open the source document
+  with the cited page highlighted.
+- Each answer shows a **"Why this answer"** caption — the three-layer model
+  (Universal × Role × Company intelligence).
+- Typing your own question returns a role-appropriate reply with a typing
+  animation.
+
+See [`DEMO_SCRIPT.md`](./DEMO_SCRIPT.md) for a presenter walkthrough.
+
 ## Tech
 
 - Vite + React + TypeScript

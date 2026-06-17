@@ -9,12 +9,16 @@ export default function Sidebar({
   role,
   initials,
   onSignOut,
+  onOpenDoc,
+  onUpload,
 }: {
   company: string;
   userName: string;
   role: Role;
   initials: string;
   onSignOut: () => void;
+  onOpenDoc: (name: string) => void;
+  onUpload: () => void;
 }) {
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col bg-slate-900 text-slate-200">
@@ -55,7 +59,7 @@ export default function Sidebar({
 
       {/* Documents */}
       <div className="mt-5 flex-1 overflow-y-auto">
-        <DocumentList />
+        <DocumentList onOpenDoc={onOpenDoc} onUpload={onUpload} />
       </div>
 
       {/* Footer */}

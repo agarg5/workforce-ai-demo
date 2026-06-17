@@ -3,10 +3,14 @@ import Sidebar from "../components/Sidebar";
 import RoleBadge from "../components/RoleBadge";
 import RoleToggle from "../components/RoleToggle";
 import ChatMessage, { type Message } from "../components/ChatMessage";
+import TypingIndicator from "../components/TypingIndicator";
+import DocumentPreview, { type DocTarget } from "../components/DocumentPreview";
+import UploadModal from "../components/UploadModal";
 import {
   DEMO_TOPICS,
   ROLES,
   genericReply,
+  type Citation,
   type RoleKey,
 } from "../data/mockData";
 
@@ -36,7 +40,11 @@ export default function Chat({
     { message: Message; roleKey: RoleKey }[]
   >([]);
   const [draft, setDraft] = useState("");
+  const [typing, setTyping] = useState(false);
+  const [docTarget, setDocTarget] = useState<DocTarget | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeRole = ROLES[role];
   const userName = activeRole.sampleUser;
@@ -57,19 +65,33 @@ export default function Chat({
       top: scrollRef.current.scrollHeight,
       behavior: "smooth",
     });
-  }, [thread, role]);
+  }, [thread, role, typing]);
+
+  useEffect(() => {
+    return () => {
+      if (timer.current) clearTimeout(timer.current);
+    };
+  }, []);
 
   function send(text: string) {
     const q = text.trim();
-    if (!q) return;
+    if (!q || typing) return;
     const topic = DEMO_TOPICS.find((t) => t.match.test(q));
     const response = topic ? topic.responses[role] : genericReply(activeRole);
+    const sentRole = role;
     setThread((prev) => [
       ...prev,
-      { roleKey: role, message: { kind: "user", text: q, author: userName } },
-      { roleKey: role, message: { kind: "assistant", response } },
+      { roleKey: sentRole, message: { kind: "user", text: q, author: userName } },
     ]);
     setDraft("");
+    setTyping(true);
+    timer.current = setTimeout(() => {
+      setThread((prev) => [
+        ...prev,
+        { roleKey: sentRole, message: { kind: "assistant", response } },
+      ]);
+      setTyping(false);
+    }, 900);
   }
 
   return (
@@ -80,6 +102,8 @@ export default function Chat({
         role={activeRole}
         initials={initials}
         onSignOut={onSignOut}
+        onOpenDoc={(name) => setDocTarget({ doc: name })}
+        onUpload={() => setShowUpload(true)}
       />
 
       {/* Main column */}
@@ -114,7 +138,7 @@ export default function Chat({
             <span className="rounded bg-slate-900 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
               Demo
             </span>
-            Switch roles and watch the same question get a different answer:
+            Switch roles and watch the same questions get different answers:
           </div>
           <RoleToggle active={role} onChange={setRole} />
         </div>
@@ -123,21 +147,30 @@ export default function Chat({
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-6">
           <div className="mx-auto flex max-w-3xl flex-col gap-6">
             {demoExchange.map((m, i) => (
-              <ChatMessage
-                key={`demo-${i}`}
-                message={m}
-                role={activeRole}
-                initials={initials}
-              />
+              <div key={`demo-${role}-${i}`} className="animate-fade-in">
+                <ChatMessage
+                  message={m}
+                  role={activeRole}
+                  initials={initials}
+                  onCitationClick={(c: Citation) =>
+                    setDocTarget({ doc: c.doc, page: c.page })
+                  }
+                />
+              </div>
             ))}
             {thread.map((item, i) => (
-              <ChatMessage
-                key={`t-${i}`}
-                message={item.message}
-                role={ROLES[item.roleKey]}
-                initials={initialsOf(ROLES[item.roleKey].sampleUser)}
-              />
+              <div key={`t-${i}`} className="animate-fade-in">
+                <ChatMessage
+                  message={item.message}
+                  role={ROLES[item.roleKey]}
+                  initials={initialsOf(ROLES[item.roleKey].sampleUser)}
+                  onCitationClick={(c: Citation) =>
+                    setDocTarget({ doc: c.doc, page: c.page })
+                  }
+                />
+              </div>
             ))}
+            {typing && <TypingIndicator role={activeRole} />}
           </div>
         </div>
 
@@ -171,7 +204,7 @@ export default function Chat({
               <button
                 type="submit"
                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-900 text-white transition hover:bg-slate-800 disabled:opacity-40"
-                disabled={!draft.trim()}
+                disabled={!draft.trim() || typing}
                 aria-label="Send"
               >
                 <svg
@@ -190,6 +223,14 @@ export default function Chat({
           </div>
         </div>
       </div>
+
+      {docTarget && (
+        <DocumentPreview
+          target={docTarget}
+          onClose={() => setDocTarget(null)}
+        />
+      )}
+      {showUpload && <UploadModal onClose={() => setShowUpload(false)} />}
     </div>
   );
 }

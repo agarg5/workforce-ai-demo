@@ -1,5 +1,6 @@
-import type { Role, RoleResponse } from "../data/mockData";
+import { COMPANY_DOCS, type Citation, type Role, type RoleResponse } from "../data/mockData";
 import CitationChip from "./CitationChip";
+import IntelligenceLayers from "./IntelligenceLayers";
 
 export interface UserMessage {
   kind: "user";
@@ -59,10 +60,12 @@ export default function ChatMessage({
   message,
   role,
   initials,
+  onCitationClick,
 }: {
   message: Message;
   role: Role;
   initials: string;
+  onCitationClick?: (citation: Citation) => void;
 }) {
   if (message.kind === "user") {
     return (
@@ -104,9 +107,14 @@ export default function ChatMessage({
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs font-medium text-slate-400">Sources:</span>
             {response.citations.map((c, i) => (
-              <CitationChip key={i} citation={c} />
+              <CitationChip
+                key={i}
+                citation={c}
+                onClick={onCitationClick ? () => onCitationClick(c) : undefined}
+              />
             ))}
           </div>
+          <IntelligenceLayers role={role} docCount={COMPANY_DOCS.length} />
         </div>
       </div>
     </div>

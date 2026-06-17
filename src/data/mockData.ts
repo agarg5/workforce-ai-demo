@@ -123,6 +123,164 @@ export const COMPANY_DOCS: CompanyDoc[] = [
   { name: "Onboarding Checklist.pdf", meta: "Updated 1 month ago · 6 pages" },
 ];
 
+// Mock page-level content for each document, so citations and the document
+// list open a believable preview instead of dead-ending.
+export interface DocPage {
+  page: number;
+  heading: string;
+  body: string[];
+}
+
+export const DOC_CONTENT: Record<string, DocPage[]> = {
+  "Deployment Guide.pdf": [
+    {
+      page: 1,
+      heading: "Overview",
+      body: [
+        "Northwind Cloud ships through an automated CI/CD pipeline (Jenkins) with a manual approval gate before production.",
+        "Pipeline and environment access is provisioned to engineers during onboarding.",
+      ],
+    },
+    {
+      page: 3,
+      heading: "Promoting a release",
+      body: [
+        "Tagged releases auto-deploy to staging. Run the smoke suite, then approve the manual promotion gate to ship to production.",
+        "Production promotion is blocked unless unit + integration suites pass and the staging smoke test is green.",
+      ],
+    },
+    {
+      page: 8,
+      heading: "Rollback procedure",
+      body: [
+        "If production error rate exceeds 2%, trigger the deploy:rollback job to restore the last green release.",
+        "Rollback is the default mitigation during an incident — fix forward only with release-manager sign-off.",
+      ],
+    },
+  ],
+  "Incident Response Runbook.pdf": [
+    {
+      page: 1,
+      heading: "Severity & overview",
+      body: [
+        "Severity is classified by customer impact. Sev-1 (major customer-facing outage) triggers immediate executive notification.",
+        "Customer-impacting incidents are tracked against our 99.9% uptime SLA.",
+      ],
+    },
+    {
+      page: 2,
+      heading: "Roles during an incident",
+      body: [
+        "An Incident Commander (IC) runs the response; the on-call engineer mitigates; a comms lead keeps stakeholders informed.",
+        "For Sev-1, the IC role is mandatory.",
+      ],
+    },
+    {
+      page: 3,
+      heading: "On-call & escalation matrix",
+      body: [
+        "Engineering maintains a rotating on-call schedule in PagerDuty.",
+        "Escalation path: on-call engineer → secondary on-call → Engineering lead.",
+      ],
+    },
+    {
+      page: 4,
+      heading: "First response",
+      body: [
+        "Acknowledge the page within 5 minutes and open an incident channel.",
+        "Mitigate the fastest safe way — usually a rollback to the last green release — before root-causing.",
+      ],
+    },
+    {
+      page: 9,
+      heading: "Post-mortem & test coverage",
+      body: [
+        "Every Sev-1/Sev-2 gets a blameless post-mortem within 48 hours.",
+        "Identify the test-coverage gap that allowed the failure and add a regression test gating future releases.",
+      ],
+    },
+    {
+      page: 11,
+      heading: "Communications",
+      body: [
+        "Post an internal status update every 30 minutes until resolved.",
+        "Update the public status page for any customer-impacting incident.",
+      ],
+    },
+    {
+      page: 12,
+      heading: "Metrics & SLAs",
+      body: [
+        "Median time-to-mitigate is tracked as a key reliability metric.",
+        "Sustained SLA breaches may carry service-credit obligations.",
+      ],
+    },
+  ],
+  "Architecture Overview.pdf": [
+    {
+      page: 4,
+      heading: "System components",
+      body: [
+        "The platform is a multi-tenant service: an API tier, a Postgres primary with read replicas, and an async worker pool.",
+        "Each release is a versioned, immutable artifact promoted across staging and production environments.",
+      ],
+    },
+  ],
+  "Release Process.pdf": [
+    {
+      page: 1,
+      heading: "Overview",
+      body: [
+        "Releases follow a defined sequence with named owners and a manual production gate.",
+        "Standard releases ship with no scheduled downtime.",
+      ],
+    },
+    {
+      page: 2,
+      heading: "Sequence & owners",
+      body: [
+        "1. Eng lead tags the release → 2. Auto-deploy to staging → 3. QA sign-off → 4. Release manager approves prod promotion → 5. Post-deploy verification.",
+      ],
+    },
+    {
+      page: 5,
+      heading: "Build & tag",
+      body: [
+        "Tag the release (vX.Y.Z) and let Jenkins build the artifact. CI must be green on main before tagging.",
+      ],
+    },
+    {
+      page: 7,
+      heading: "QA gates",
+      body: [
+        "Production promotion requires a green regression suite and passing staging smoke tests, with no open Sev-1/Sev-2 defects on the release tag.",
+      ],
+    },
+  ],
+  "Onboarding Checklist.pdf": [
+    {
+      page: 2,
+      heading: "Access provisioning",
+      body: [
+        "New engineers are granted pipeline and environment access during onboarding.",
+        "Deploy-permission requests for new hires are routed to their Engineering lead.",
+      ],
+    },
+    {
+      page: 5,
+      heading: "On-call onboarding",
+      body: [
+        "Engineers join the on-call rotation after shadowing two incidents.",
+        "On-call expectations and any compensation policy are covered in the team handbook.",
+      ],
+    },
+  ],
+};
+
+export function getDocPages(name: string): DocPage[] {
+  return DOC_CONTENT[name] ?? [];
+}
+
 // The same question, answered through five different role lenses,
 // grounded in the SAME company documents.
 export const DEPLOY_RESPONSES: Record<RoleKey, RoleResponse> = {
