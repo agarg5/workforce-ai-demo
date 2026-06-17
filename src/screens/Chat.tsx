@@ -3,9 +3,8 @@ import Sidebar from "../components/Sidebar";
 import RoleBadge from "../components/RoleBadge";
 import RoleToggle from "../components/RoleToggle";
 import ChatMessage, { type Message } from "../components/ChatMessage";
-import { DEMO_QUESTION } from "../constants";
 import {
-  DEPLOY_RESPONSES,
+  DEMO_TOPICS,
   ROLES,
   genericReply,
   type RoleKey,
@@ -17,8 +16,7 @@ function initialsOf(name: string) {
 }
 
 const SUGGESTIONS = [
-  DEMO_QUESTION,
-  "What is our release process?",
+  ...DEMO_TOPICS.map((t) => t.question),
   "What's in the onboarding checklist?",
 ];
 
@@ -44,12 +42,13 @@ export default function Chat({
   const userName = activeRole.sampleUser;
   const initials = initialsOf(userName);
 
-  // The pre-populated, role-aware demo exchange (always reflects current role).
+  // The pre-populated, role-aware demo exchanges (always reflect current role).
   const demoExchange: Message[] = useMemo(
-    () => [
-      { kind: "user", text: DEMO_QUESTION, author: userName },
-      { kind: "assistant", response: DEPLOY_RESPONSES[role] },
-    ],
+    () =>
+      DEMO_TOPICS.flatMap((topic): Message[] => [
+        { kind: "user", text: topic.question, author: userName },
+        { kind: "assistant", response: topic.responses[role] },
+      ]),
     [role, userName]
   );
 
@@ -63,8 +62,8 @@ export default function Chat({
   function send(text: string) {
     const q = text.trim();
     if (!q) return;
-    const isDeploy = /deploy/i.test(q);
-    const response = isDeploy ? DEPLOY_RESPONSES[role] : genericReply(activeRole);
+    const topic = DEMO_TOPICS.find((t) => t.match.test(q));
+    const response = topic ? topic.responses[role] : genericReply(activeRole);
     setThread((prev) => [
       ...prev,
       { roleKey: role, message: { kind: "user", text: q, author: userName } },
